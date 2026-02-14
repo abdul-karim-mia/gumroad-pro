@@ -183,7 +183,7 @@ function renderResponse(ctx, data) {
 
 module.exports = {
   name: 'gumroad-pro',
-  version: '1.2.3',
+  version: '1.2.9',
   description: 'Gumroad Pro - Adaptive Multi-Channel Suite',
 
   commands: {
