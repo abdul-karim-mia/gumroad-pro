@@ -17,6 +17,15 @@
   },
   "metadata": {
     "openclaw": {
+      "requires": {
+        "bins": [
+          "node"
+        ],
+        "env": [
+          "GUMROAD_ACCESS_TOKEN"
+        ],
+        "config": []
+      },
       "primaryEnv": "GUMROAD_ACCESS_TOKEN"
     }
   }
