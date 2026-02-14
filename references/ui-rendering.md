@@ -11,6 +11,9 @@ To provide a premium experience, the skill prioritizes **Inline Editing**.
 | `send` | Sends a brand new message to the chat. | Use only for the initial command invocation (`/gp`). |
 | `alert` | Shows a temporary notification (platform dependent). | Use for quick confirmations (e.g., "Receipt Resent"). |
 
+> [!IMPORTANT]
+> **64-Character Limit**: Telegram and some other platforms limit `callback_data` to **64 characters**. Avoid embedding user input or long keys directly. Use `ctx.session` to pass complex parameters between states.
+
 **AI Rule**: Always set `action: 'edit'` unless you are explicitly starting a new interaction thread. This keeps the user's chat history clean and focused.
 
 ## 🏗️ Button Schema

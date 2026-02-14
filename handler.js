@@ -239,7 +239,8 @@ module.exports = {
       }
       else if (state.action === 'search_sales_email') {
         delete ctx.session.gpPendingInput;
-        return renderResponse(ctx, { ...(await getSalesMenu(ctx, text)), action: 'edit', interrupt: true });
+        ctx.session.gpSalesFilter = { email: text, productId: null };
+        return renderResponse(ctx, { ...(await getSalesMenu(ctx)), action: 'edit', interrupt: true });
       }
       else if (state.action === 'disc_name') {
         ctx.session.gpPendingInput = { ...state, name: text, action: 'disc_val' };
@@ -247,12 +248,12 @@ module.exports = {
       }
       else if (state.action === 'disc_val') {
         const val = parseInt(text);
-        delete ctx.session.gpPendingInput;
+        ctx.session.gpPendingInput.amount = val;
         return renderResponse(ctx, {
           text: `🎟️ **Discount: ${state.name} (${val})**\n\nSelect the **Type**:`,
           buttons: [
-            [{ text: '💵 Fixed (Cents)', callback_data: `gp:disc_final:${state.pid}:${state.name}:${val}:cents` }],
-            [{ text: '🏷️ Percentage (%)', callback_data: `gp:disc_final:${state.pid}:${state.name}:${val}:percent` }],
+            [{ text: '💵 Fixed (Cents)', callback_data: `gp:disc_final:cents` }],
+            [{ text: '🏷️ Percentage (%)', callback_data: `gp:disc_final:percent` }],
             [{ text: '❌ Cancel', callback_data: `gp:discounts:${state.pid}` }]
           ],
           action: 'edit', interrupt: true
@@ -315,17 +316,18 @@ module.exports = {
       return renderResponse(ctx, { ...(await getVariantsListMenu(ctx, pid, cid)), action: 'edit', interrupt: true });
     }
 
-    // --- SALES ---
-    if (text === 'gp:sales') return renderResponse(ctx, { ...(await getSalesMenu(ctx)), action: 'edit', interrupt: true });
+    if (text === 'gp:sales') {
+      ctx.session.gpSalesFilter = { email: null, productId: null };
+      return renderResponse(ctx, { ...(await getSalesMenu(ctx)), action: 'edit', interrupt: true });
+    }
     if (text.startsWith('gp:prod_sales:')) {
-      return renderResponse(ctx, { ...(await getSalesMenu(ctx, null, null, text.split(':')[2])), action: 'edit', interrupt: true });
+      const productId = text.split(':')[2];
+      ctx.session.gpSalesFilter = { email: null, productId: productId };
+      return renderResponse(ctx, { ...(await getSalesMenu(ctx)), action: 'edit', interrupt: true });
     }
     if (text.startsWith('gp:sales_page:')) {
-      const parts = text.split(':');
-      const pageKey = parts[2];
-      const email = parts[3] === 'null' ? null : parts[3];
-      const productId = parts[4] === 'null' ? null : parts[4];
-      return renderResponse(ctx, { ...(await getSalesMenu(ctx, email, pageKey, productId)), action: 'edit', interrupt: true });
+      const pageKey = text.split(':')[2];
+      return renderResponse(ctx, { ...(await getSalesMenu(ctx, pageKey)), action: 'edit', interrupt: true });
     }
     if (text === 'gp:sales_search_ask') {
       ctx.session.gpPendingInput = { action: 'search_sales_email' };
@@ -379,8 +381,7 @@ module.exports = {
     // --- PAYOUTS ---
     if (text === 'gp:payouts') return renderResponse(ctx, { ...(await getPayoutsMenu(ctx)), action: 'edit', interrupt: true });
     if (text.startsWith('gp:payout_page:')) {
-      const parts = text.split(':');
-      return renderResponse(ctx, { ...(await getPayoutsMenu(ctx, parts[2])), action: 'edit', interrupt: true });
+      return renderResponse(ctx, { ...(await getPayoutsMenu(ctx, text.split(':')[2])), action: 'edit', interrupt: true });
     }
     if (text.startsWith('gp:payout_det:')) {
       return renderResponse(ctx, { ...(await getPayoutDetails(ctx, text.split(':')[2])), action: 'edit', interrupt: true });
@@ -416,10 +417,20 @@ module.exports = {
       return renderResponse(ctx, { text: '🎟️ **Create Discount**\n\nPlease reply with the **Code Name**.', buttons: [[{ text: '❌ Cancel', callback_data: `gp:discounts:${pid}` }]], action: 'edit', interrupt: true });
     }
     if (text.startsWith('gp:disc_final:')) {
-      const [_, __, pid, name, val, type] = text.split(':');
-      const res = await runGumroadJSON(ctx, 'discounts', 'create', { product: pid, name, amount: val, type });
-      if (res.success) return renderResponse(ctx, { ...(await getDiscountsMenu(ctx, pid)), text: `✅ Discount Created: ${res.offer_code.name}`, action: 'edit', interrupt: true });
-      else return renderResponse(ctx, { text: `❌ Failed: ${res.error}`, buttons: [[{ text: '🔙 Back', callback_data: `gp:discounts:${pid}` }]], action: 'edit', interrupt: true });
+      const state = ctx.session.gpPendingInput;
+      if (!state) return renderResponse(ctx, { text: '⚠️ Session expired. Please restart.', buttons: [[{ text: '🔙 Back', callback_data: 'gp:main' }]], action: 'edit' });
+
+      const type = text.split(':')[2];
+      const res = await runGumroadJSON(ctx, 'discounts', 'create', {
+        product: state.pid,
+        name: state.name,
+        amount: state.amount,
+        type: type,
+        limit: 1000
+      });
+      delete ctx.session.gpPendingInput;
+      if (res.success) return renderResponse(ctx, { ...(await getDiscountsMenu(ctx, state.pid)), text: '✅ Discount Created', action: 'edit' });
+      else return renderResponse(ctx, { text: `❌ Failed: ${res.error}`, buttons: [[{ text: '🔙 Back', callback_data: `gp:discounts:${state.pid}` }]], action: 'edit' });
     }
 
     // --- WEBHOOKS ---
@@ -618,32 +629,33 @@ ${truncatedDesc}
   }
 }
 
-async function getSalesMenu(ctx, filterEmail = null, pageKey = null, productId = null) {
+async function getSalesMenu(ctx, pageKey = null) {
+  const filter = ctx.session?.gpSalesFilter || { email: null, productId: null };
   const params = {};
-  if (filterEmail && filterEmail !== 'null') params.email = filterEmail;
-  if (productId && productId !== 'null') params.product_id = productId;
+  if (filter.email) params.email = filter.email;
+  if (filter.productId) params.product_id = filter.productId;
   if (pageKey) params.page = pageKey;
 
   const data = await runGumroadJSON(ctx, 'sales', 'list', params);
   let title = '💸 **Transaction Ledger**\n\nSir, here are the most recent acquisitions. Select a transaction to view details.';
 
-  if (filterEmail && filterEmail !== 'null') title = `🔎 **Search Results**\n\nDisplaying records matching: \`${filterEmail}\``;
-  else if (productId && productId !== 'null') title = `🛒 **Product Sales**\n\nDisplaying transactions for the selected inventory item, Sir.`;
+  if (filter.email) title = `🔎 **Search Results**\n\nDisplaying records matching: \`${filter.email}\``;
+  else if (filter.productId) title = `🛒 **Product Sales**\n\nDisplaying transactions for the selected inventory item, Sir.`;
 
-  if (!data.success) return { text: `⚠️ Error: ${data.error || 'Unknown Error'}`, buttons: [[{ text: '🔙 Back', callback_data: productId ? `gp:prod:${productId}` : 'gp:main' }]] };
-  if (!data.sales || data.sales.length === 0) return { text: `🔍 **No Records Found**\n\nI couldn't find any transactions matching your criteria, Sir.`, buttons: [[{ text: '🔙 Back', callback_data: productId ? `gp:prod:${productId}` : 'gp:sales' }]] };
+  if (!data.success) return { text: `⚠️ Error: ${data.error || 'Unknown Error'}`, buttons: [[{ text: '🔙 Back', callback_data: filter.productId ? `gp:prod:${filter.productId}` : 'gp:main' }]] };
+  if (!data.sales || data.sales.length === 0) return { text: `🔍 **No Records Found**\n\nI couldn't find any transactions matching your criteria, Sir.`, buttons: [[{ text: '🔙 Back', callback_data: filter.productId ? `gp:prod:${filter.productId}` : 'gp:sales' }]] };
 
   const buttons = data.sales.slice(0, 10).map(s => {
     return [{ text: `${s.email} - ${s.product_name.substring(0, 30)}`, callback_data: `gp:sale:${s.id}` }];
   });
 
-  const backTarget = productId ? `gp:prod:${productId}` : 'gp:main';
+  const backTarget = filter.productId ? `gp:prod:${filter.productId}` : 'gp:main';
   const navRow = [{ text: '🔙 Back', callback_data: backTarget }];
 
   if (data.next_page_key) {
-    navRow.push({ text: '➡️ Next Page', callback_data: `gp:sales_page:${data.next_page_key}:${filterEmail || 'null'}:${productId || 'null'}` });
+    navRow.push({ text: '➡️ Next Page', callback_data: `gp:sales_page:${data.next_page_key}` });
   } else if (pageKey) {
-    navRow.push({ text: '🏠 First Page', callback_data: productId ? `gp:prod_sales:${productId}` : 'gp:sales' });
+    navRow.push({ text: '🏠 First Page', callback_data: filter.productId ? `gp:prod_sales:${filter.productId}` : 'gp:sales' });
   }
 
   buttons.push(navRow);
