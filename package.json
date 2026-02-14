@@ -1,0 +1,17 @@
+{
+    "name": "gumroad-pro",
+    "version": "1.2.3",
+    "description": "Professional Gumroad merchant management with adaptive UI and CLI.",
+    "main": "handler.js",
+    "scripts": {
+        "cli": "node scripts/gumroad-pro.js"
+    },
+    "keywords": [
+        "gumroad",
+        "merchant",
+        "openclaw",
+        "skill"
+    ],
+    "author": "Abdul Karim Mia",
+    "license": "MIT"
+}

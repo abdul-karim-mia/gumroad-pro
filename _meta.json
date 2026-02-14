@@ -1,6 +1,23 @@
 {
   "name": "gumroad-pro",
-  "version": "1.1.0",
+  "version": "1.2.3",
   "description": "Professional Gumroad merchant management with adaptive UI and CLI.",
-  "author": "Abdul Karim Mia"
+  "author": "Abdul Karim Mia",
+  "config": {
+    "GUMROAD_ACCESS_TOKEN": {
+      "type": "string",
+      "description": "Gumroad API Key (preferred)",
+      "required": false
+    },
+    "API_KEY": {
+      "type": "string",
+      "description": "Gumroad API Key (alternative)",
+      "required": false
+    }
+  },
+  "metadata": {
+    "openclaw": {
+      "primaryEnv": "GUMROAD_ACCESS_TOKEN"
+    }
+  }
 }
