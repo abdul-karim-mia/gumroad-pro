@@ -1,6 +1,11 @@
 # Changelog: Gumroad Pro
 
-## [1.2.3] - 2026-02-14
+## [1.2.9] - 2026-02-14
+### Fixed
+- **Packaging Coherence**: Reconciled "packaging drift" by synchronizing versioning and metadata across `package.json`, `_meta.json`, and `SKILL.md`.
+- **Manifest Standards**: Added missing `homepage` links and strictly declared `GUMROAD_ACCESS_TOKEN` as a required environment variable for registry-level transparency.
+
+## [1.2.5] - 2026-02-14
 ### Added
 - Feature: **Product-Specific Sales View**. You can now view a filtered list of transactions directly from any product's management menu.
 - **Improved Pagination**: Removed 10-item slicing in Sales menu to show full API pages (20 items). Optimized navigation row to consistently offer a "First Page" return path.
