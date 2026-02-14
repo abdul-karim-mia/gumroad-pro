@@ -645,18 +645,15 @@ async function getSalesMenu(ctx, pageKey = null) {
   if (!data.success) return { text: `⚠️ Error: ${data.error || 'Unknown Error'}`, buttons: [[{ text: '🔙 Back', callback_data: filter.productId ? `gp:prod:${filter.productId}` : 'gp:main' }]] };
   if (!data.sales || data.sales.length === 0) return { text: `🔍 **No Records Found**\n\nI couldn't find any transactions matching your criteria, Sir.`, buttons: [[{ text: '🔙 Back', callback_data: filter.productId ? `gp:prod:${filter.productId}` : 'gp:sales' }]] };
 
-  const buttons = data.sales.slice(0, 10).map(s => {
+  const buttons = data.sales.map(s => {
     return [{ text: `${s.email} - ${s.product_name.substring(0, 30)}`, callback_data: `gp:sale:${s.id}` }];
   });
 
   const backTarget = filter.productId ? `gp:prod:${filter.productId}` : 'gp:main';
   const navRow = [{ text: '🔙 Back', callback_data: backTarget }];
 
-  if (data.next_page_key) {
-    navRow.push({ text: '➡️ Next Page', callback_data: `gp:sales_page:${data.next_page_key}` });
-  } else if (pageKey) {
-    navRow.push({ text: '🏠 First Page', callback_data: filter.productId ? `gp:prod_sales:${filter.productId}` : 'gp:sales' });
-  }
+  if (data.next_page_key) navRow.push({ text: '➡️ Next', callback_data: `gp:sales_page:${data.next_page_key}` });
+  if (pageKey) navRow.push({ text: '🏠 First', callback_data: filter.productId ? `gp:prod_sales:${filter.productId}` : 'gp:sales' });
 
   buttons.push(navRow);
 
