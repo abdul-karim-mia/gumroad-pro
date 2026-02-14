@@ -12,6 +12,9 @@
         "openclaw",
         "skill"
     ],
-    "author": "Abdul Karim Mia",
+    "author": {
+        "name": "Abdul Karim Mia",
+        "url": "https://github.com/abdul-karim-mia"
+    },
     "license": "MIT"
 }

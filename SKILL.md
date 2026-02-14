@@ -57,3 +57,6 @@ The platform will automatically inject your `apiKey` into the preferred `GUMROAD
 ### Offer Management
 - Create, list, or remove discount codes for marketing campaigns.
 - View [detailed discount commands]({baseDir}/references/api-reference.md#4-discounts-offer-codes).
+
+---
+Developed for the OpenClaw community by [Abdul Karim Mia](https://github.com/abdul-karim-mia).

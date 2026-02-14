@@ -466,7 +466,10 @@ module.exports = {
       }
       return renderResponse(ctx, {
         text: msg,
-        buttons: [[{ text: '🔙 Back', callback_data: 'gp:main' }]],
+        buttons: [
+          [{ text: '🌐 Developer GitHub', url: 'https://github.com/abdul-karim-mia' }],
+          [{ text: '🔙 Back', callback_data: 'gp:main' }]
+        ],
         action: 'edit', interrupt: true
       });
     }

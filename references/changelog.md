@@ -3,6 +3,7 @@
 ## [1.2.3] - 2026-02-14
 ### Added
 - Feature: **Product-Specific Sales View**. You can now view a filtered list of transactions directly from any product's management menu.
+- **Improved Pagination**: Removed 10-item slicing in Sales menu to show full API pages (20 items). Optimized navigation row to consistently offer a "First Page" return path.
 - Created `package.json` for formal Node.js structure.
 - Created `references/handler-guide.md` for AI interaction protocols.
 - Created `references/ui-rendering.md` for adaptive button documentation.
