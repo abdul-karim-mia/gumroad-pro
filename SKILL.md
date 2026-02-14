@@ -1,12 +1,13 @@
+---
 name: gumroad-pro
 description: "Comprehensive Gumroad merchant management for Products, Sales, Licenses, Discounts, Payouts, and Webhooks. Use when Claude needs to: (1) Manage digital or physical inventory, (2) Oversee transactions and process refunds/shipping, (3) Verify or rotate license keys, (4) Manage offer codes, or (5) Monitor payout history and store webhooks."
 metadata:
   {
     "openclaw":
       {
-        "requires": { "bins": ["node"], "env": ["GUMROAD_ACCESS_TOKEN"], "config": [] },
-        "primaryEnv": "GUMROAD_ACCESS_TOKEN",
-      },
+        "requires": { "bins": ["node"], "env": ["GUMROAD_ACCESS_TOKEN", "API_KEY"], "config": [] },
+        "primaryEnv": "GUMROAD_ACCESS_TOKEN"
+      }
   }
 ---
 

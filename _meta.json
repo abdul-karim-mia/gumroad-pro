@@ -7,7 +7,7 @@
     "GUMROAD_ACCESS_TOKEN": {
       "type": "string",
       "description": "Gumroad API Key (preferred)",
-      "required": false
+      "required": true
     },
     "API_KEY": {
       "type": "string",
@@ -22,7 +22,8 @@
           "node"
         ],
         "env": [
-          "GUMROAD_ACCESS_TOKEN"
+          "GUMROAD_ACCESS_TOKEN",
+          "API_KEY"
         ],
         "config": []
       },
